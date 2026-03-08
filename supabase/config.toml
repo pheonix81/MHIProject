@@ -1,0 +1,66 @@
+# Supabase Configuration
+# This file configures the Supabase CLI for local development and migrations
+
+[project]
+# Reference to the project alias
+project_id = "your-project-id"
+
+[api]
+# Port for the local Supabase API
+port = 54321
+schemas = ["public", "storage", "graphql_public"]
+max_rows = 1000
+
+[db]
+# Port for the local PostgreSQL database
+port = 54322
+major_version = 15
+# Connection pooling (using pgBouncer)
+pooling_mode = "transaction"
+max_db_conn = 20
+default_query_timeout = "30s"
+
+[realtime]
+# Realtime subscriptions
+enabled = true
+max_connections = 1000
+max_message_size = 200000
+tick_interval = 1000
+
+[auth]
+# Authentication configuration
+enabled = true
+site_url = "http://localhost:3000"
+additional_redirect_urls = ["http://localhost"]
+jwt_secret = "super-secret-jwt-token-with-at-least-32-characters-long"
+jwt_exp = 3600
+enable_signup = true
+enable_anonymous_signups = false
+
+[storage]
+# File storage (S3-compatible)
+enabled = true
+file_size_limit = 52428800 # 50MB
+s3_host = "localhost:54322"
+s3_protocol = "http"
+s3_region = "local"
+s3_access_key = "625729a08b95740f652f9
+5f8c8b6c0d68"
+s3_secret_key = "850181e4652dd023b8790c4f039c4a5765d0
+e2ac7addc81cb888e6795ff1db6cc"
+
+[studio]
+# Supabase Studio (local dashboard)
+enabled = true
+port = 54323
+
+[functions]
+# Edge Functions
+port = 54324
+verify_jwt = true
+
+[analytics]
+enabled = false
+
+[vector]
+enabled = false

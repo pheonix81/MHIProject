@@ -71,15 +71,13 @@ export function Header() {
                       >
                         My Bookmarks
                       </Link>
-                      {user.user_metadata?.role === 'platform_admin' && (
-                        <Link
-                          href="/admin"
-                          className="block px-4 py-2 text-gray-700 hover:bg-gray-50 border-t border-gray-200"
-                          onClick={() => setMenuOpen(false)}
-                        >
-                          Admin Panel
-                        </Link>
-                      )}
+                      <Link
+                        href="/admin/dashboard"
+                        className="block px-4 py-2 text-gray-700 hover:bg-gray-50 border-t border-gray-200 font-semibold text-blue-600"
+                        onClick={() => setMenuOpen(false)}
+                      >
+                        📊 Admin Dashboard
+                      </Link>
                       <button
                         onClick={handleSignOut}
                         className="w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-50 border-t border-gray-200"

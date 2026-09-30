@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { API_BASE_URL } from '@/lib/api';
-import { getUserIdForApi } from '@/lib/testUser';
+import { useAuth } from '@/hooks/useAuth';
 import { Download, Loader2 } from 'lucide-react';
 
 export interface ExportDialogProps {
@@ -16,17 +16,20 @@ export interface ExportDialogProps {
   };
   isOpen: boolean;
   onClose: () => void;
-  userId?: string;
 }
 
-export const ExportDialog: React.FC<ExportDialogProps> = ({ currentQuery, isOpen, onClose, userId }) => {
+export const ExportDialog: React.FC<ExportDialogProps> = ({ currentQuery, isOpen, onClose }) => {
+  const { user } = useAuth();
   const [format, setFormat] = useState<'csv' | 'json'>('csv');
   const [isExporting, setIsExporting] = useState(false);
   const [error, setError] = useState('');
 
-  const userIdForRequest = userId || (typeof window !== 'undefined' ? getUserIdForApi() : 'test-user');
-
   const handleExport = async () => {
+    if (!user) {
+      setError('You must be logged in to export results');
+      return;
+    }
+
     if (!currentQuery) {
       setError('No search query to export');
       return;
@@ -40,7 +43,7 @@ export const ExportDialog: React.FC<ExportDialogProps> = ({ currentQuery, isOpen
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-User-ID': userIdForRequest || 'test-user',
+          'X-User-ID': user!.id,
         },
         body: JSON.stringify({
           searchQuery: currentQuery,

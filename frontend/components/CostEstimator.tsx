@@ -3,8 +3,21 @@
 import { useState } from 'react';
 import { formatPrice, calculateOutOfPocket } from '@/lib/utils';
 
+interface EstimateParams {
+  cpt_code: string;
+  deductible_remaining: number;
+  copay: number;
+}
+
+type EstimatePayload = Record<string, unknown>;
+
+interface EstimateResult extends EstimatePayload {
+  out_of_pocket: number;
+  insurance_responsibility: number;
+}
+
 interface CostEstimatorProps {
-  onEstimate: (params: any) => Promise<any>;
+  onEstimate: (params: EstimateParams) => Promise<EstimatePayload>;
   loading: boolean;
 }
 
@@ -14,7 +27,7 @@ export function CostEstimator({ onEstimate, loading }: CostEstimatorProps) {
   const [copay, setCopay] = useState('0');
   const [coinsurance, setCoinsurance] = useState('20');
   const [insuranceAllowed, setInsuranceAllowed] = useState('5000');
-  const [estimate, setEstimate] = useState<any>(null);
+  const [estimate, setEstimate] = useState<EstimateResult | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const handleCalculate = async (e: React.FormEvent) => {

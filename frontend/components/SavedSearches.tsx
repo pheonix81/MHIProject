@@ -1,31 +1,32 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { API_BASE_URL } from '@/lib/api';
-import { getUserIdForApi } from '@/lib/testUser';
+import { useAuth } from '@/hooks/useAuth';
 import { Loader2, Save, Trash2, ChevronDown } from 'lucide-react';
+
+type SearchQuery = Record<string, unknown>;
 
 interface SavedSearch {
   id: string;
   name: string;
   description?: string;
-  search_query: any;
+  search_query: SearchQuery;
   result_count: number;
   last_executed_at?: string;
   created_at: string;
 }
 
 export interface SavedSearchesProps {
-  currentQuery?: any;
-  onLoadSearch?: (query: any) => void;
-  userId?: string;
+  currentQuery?: SearchQuery;
+  onLoadSearch?: (query: SearchQuery) => void;
 }
 
 export const SavedSearches: React.FC<SavedSearchesProps> = ({
   currentQuery,
   onLoadSearch,
-  userId,
 }) => {
+  const { user } = useAuth();
   const [savedSearches, setSavedSearches] = useState<SavedSearch[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
@@ -35,23 +36,19 @@ export const SavedSearches: React.FC<SavedSearchesProps> = ({
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState('');
 
-  // Get user ID from props, localStorage, or generate test user ID
-  const userIdForRequest = userId || (typeof window !== 'undefined' ? getUserIdForApi() : 'test-user');
-
   // Fetch saved searches
-  useEffect(() => {
-    if (isOpen && userIdForRequest) {
-      fetchSavedSearches();
+  const fetchSavedSearches = useCallback(async () => {
+    if (!user) {
+      setError('You must be logged in to view saved searches');
+      return;
     }
-  }, [isOpen, userIdForRequest]);
 
-  const fetchSavedSearches = async () => {
     setIsLoading(true);
     setError('');
     try {
       const response = await fetch(`${API_BASE_URL}/v1/saved-searches`, {
         headers: {
-          'X-User-ID': userIdForRequest || 'test-user',
+          'X-User-ID': user.id,
         },
       });
 
@@ -63,10 +60,22 @@ export const SavedSearches: React.FC<SavedSearchesProps> = ({
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [user]);
+
+  useEffect(() => {
+    if (isOpen && user) {
+      fetchSavedSearches();
+    }
+  }, [isOpen, user, fetchSavedSearches]);
 
   const handleSaveSearch = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!user) {
+      setError('You must be logged in to save searches');
+      return;
+    }
+
     if (!saveName.trim() || !currentQuery) {
       setError('Please enter a name for your search');
       return;
@@ -80,7 +89,7 @@ export const SavedSearches: React.FC<SavedSearchesProps> = ({
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-User-ID': userIdForRequest || 'test-user',
+          'X-User-ID': user.id,
         },
         body: JSON.stringify({
           name: saveName,
@@ -107,7 +116,7 @@ export const SavedSearches: React.FC<SavedSearchesProps> = ({
     }
   };
 
-  const handleLoadSearch = (query: any) => {
+  const handleLoadSearch = (query: SearchQuery) => {
     if (onLoadSearch) {
       onLoadSearch(query);
       setIsOpen(false);
@@ -115,13 +124,18 @@ export const SavedSearches: React.FC<SavedSearchesProps> = ({
   };
 
   const handleDeleteSearch = async (searchId: string) => {
+    if (!user) {
+      setError('You must be logged in to delete searches');
+      return;
+    }
+
     if (!confirm('Delete this saved search?')) return;
 
     try {
       const response = await fetch(`${API_BASE_URL}/v1/saved-searches/${searchId}`, {
         method: 'DELETE',
         headers: {
-          'X-User-ID': userIdForRequest || 'test-user',
+          'X-User-ID': user.id,
         },
       });
 

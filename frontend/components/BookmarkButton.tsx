@@ -2,30 +2,32 @@
 
 import React, { useState } from 'react';
 import { API_BASE_URL } from '@/lib/api';
-import { getUserIdForApi } from '@/lib/testUser';
+import { useAuth } from '@/hooks/useAuth';
 import { Bookmark } from 'lucide-react';
 
 export interface BookmarkButtonProps {
   rateId: string;
   isBookmarked?: boolean;
   onBookmarkChange?: (isBookmarked: boolean) => void;
-  userId?: string;
 }
 
 export const BookmarkButton: React.FC<BookmarkButtonProps> = ({
   rateId,
   isBookmarked = false,
   onBookmarkChange,
-  userId,
 }) => {
+  const { user } = useAuth();
   const [bookmarked, setBookmarked] = useState(isBookmarked);
   const [isLoading, setIsLoading] = useState(false);
   const [showNoteInput, setShowNoteInput] = useState(false);
   const [note, setNote] = useState('');
 
-  const userIdForRequest = userId || (typeof window !== 'undefined' ? getUserIdForApi() : 'test-user');
-
   const handleBookmark = async () => {
+    if (!user) {
+      alert('You must be logged in to bookmark results');
+      return;
+    }
+
     setIsLoading(true);
 
     try {
@@ -40,7 +42,7 @@ export const BookmarkButton: React.FC<BookmarkButtonProps> = ({
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'X-User-ID': userIdForRequest || 'test-user',
+            'X-User-ID': user.id,
           },
           body: JSON.stringify({
             rateId,

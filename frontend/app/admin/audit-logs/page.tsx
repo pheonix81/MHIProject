@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { RefreshCw, AlertCircle, ChevronLeft, ChevronRight } from 'lucide-react';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
@@ -11,17 +11,21 @@ interface AuditLog {
   action: string;
   tableName: string;
   recordId: string | null;
-  changes: any;
+  changes: unknown;
   ipAddress: string | null;
   userAgent: string | null;
   createdAt: string;
 }
 
 interface AuditLogsResponse {
-  logs: AuditLog[];
-  total: number;
-  page: number;
-  pages: number;
+  success: boolean;
+  data: {
+    logs: AuditLog[];
+    total: number;
+    page: number;
+    pages: number;
+  };
+  message?: string;
 }
 
 const ACTIONS = ['CREATE', 'READ', 'UPDATE', 'DELETE', 'EXPORT', 'IMPORT'];
@@ -39,7 +43,7 @@ export default function AuditLogsPage() {
 
   const [expandedLogId, setExpandedLogId] = useState<string | null>(null);
 
-  const fetchLogs = async (pageNum: number) => {
+  const fetchLogs = useCallback(async (pageNum: number) => {
     setLoading(true);
     setError('');
     try {
@@ -74,12 +78,12 @@ export default function AuditLogsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedAction, selectedTable]);
 
   useEffect(() => {
     setPage(1);
     fetchLogs(1);
-  }, [selectedAction, selectedTable]);
+  }, [fetchLogs]);
 
   const getActionColor = (action: string) => {
     switch (action) {
@@ -208,7 +212,7 @@ export default function AuditLogsPage() {
                       </td>
                       <td className="py-3 px-4 text-sm text-gray-500">{log.ipAddress || '-'}</td>
                       <td className="py-3 px-4">
-                        {log.changes && (
+                        {!!log.changes && (
                           <button
                             onClick={() =>
                               setExpandedLogId(expandedLogId === log.id ? null : log.id)
@@ -227,7 +231,7 @@ export default function AuditLogsPage() {
           )}
 
           {/* Change Details */}
-          {expandedLogId && logs.find((l) => l.id === expandedLogId)?.changes && (
+          {expandedLogId && !!logs.find((l) => l.id === expandedLogId)?.changes && (
             <div className="border-t border-gray-200 bg-gray-50 p-6">
               <h3 className="font-semibold text-gray-900 mb-4">Changes</h3>
               <pre className="bg-gray-800 text-gray-100 p-4 rounded overflow-auto max-h-80 text-xs">

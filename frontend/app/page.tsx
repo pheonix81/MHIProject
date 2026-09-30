@@ -11,11 +11,14 @@ export default function Home() {
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!procedure || !zip) return;
+    if (!procedure && !zip) return;
 
     setLoading(true);
     try {
-      router.push(`/search?procedure=${encodeURIComponent(procedure)}&zip=${zip}`);
+      const params = new URLSearchParams();
+      if (procedure) params.append('procedure', procedure);
+      if (zip) params.append('zip', zip);
+      router.push(`/search?${params.toString()}`);
     } catch (error) {
       console.error('Search error:', error);
     } finally {
@@ -51,7 +54,6 @@ export default function Home() {
                   onChange={(e) => setProcedure(e.target.value)}
                   className="w-full px-6 py-4 text-lg border-2 border-gray-200 rounded-xl focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 transition-all duration-200"
                   disabled={loading}
-                  required
                 />
               </div>
 
@@ -59,20 +61,19 @@ export default function Home() {
               <div className="w-full sm:w-40">
                 <input
                   type="text"
-                  placeholder="ZIP code"
+                  placeholder="ZIP code (optional)"
                   value={zip}
                   onChange={(e) => setZip(e.target.value.slice(0, 5))}
                   maxLength={5}
                   className="w-full px-6 py-4 text-lg border-2 border-gray-200 rounded-xl focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 transition-all duration-200"
                   disabled={loading}
-                  required
                 />
               </div>
 
               {/* Search Button */}
               <button
                 type="submit"
-                disabled={loading || !procedure || !zip}
+                disabled={loading || (!procedure && !zip)}
                 className="px-8 py-4 bg-teal-600 text-white font-semibold text-lg rounded-xl hover:bg-teal-700 active:bg-teal-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 whitespace-nowrap"
               >
                 {loading ? 'Searching...' : 'Search'}
@@ -81,7 +82,7 @@ export default function Home() {
 
             {/* Helper Text */}
             <p className="text-sm text-gray-500">
-              💡 Example: Search "99214" (office visit) or "knee replacement" in your ZIP code
+              💡 Search by procedure name, CPT code, or ZIP code (at least one required)
             </p>
           </form>
 
@@ -124,7 +125,7 @@ export default function Home() {
               View Benchmarks →
             </a>
             <a
-              href="/estimator"
+              href="/estimate"
               className="px-6 py-3 text-teal-600 font-semibold hover:text-teal-700 transition-colors duration-200"
             >
               Try Cost Estimator →

@@ -30,7 +30,7 @@ export default function AdminPage() {
         <div className="max-w-6xl mx-auto text-center">
           <h1 className="text-3xl font-bold text-gray-900 mb-4">Access Denied</h1>
           <p className="text-gray-600 mb-6">
-            You don't have permission to access the admin panel.
+            You don&apos;t have permission to access the admin panel.
           </p>
           <Link
             href="/"

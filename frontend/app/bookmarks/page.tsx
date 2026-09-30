@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { API_BASE_URL } from '@/lib/api';
-import { getUserIdForApi } from '@/lib/testUser';
+import { useAuth } from '@/hooks/useAuth';
 import { formatPrice } from '@/lib/utils';
 import { Loader2, Trash2 } from 'lucide-react';
 
@@ -22,25 +22,25 @@ interface BookmarkedRate {
 }
 
 export default function BookmarksPage() {
+  const { user, loading } = useAuth();
   const [bookmarks, setBookmarks] = useState<BookmarkedRate[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
 
-  const userIdFromStorage =
-    typeof window !== 'undefined' ? getUserIdForApi() : 'test-user';
+  const fetchBookmarks = useCallback(async () => {
+    if (!user) {
+      setError('You must be logged in to view bookmarks');
+      setIsLoading(false);
+      return;
+    }
 
-  useEffect(() => {
-    fetchBookmarks();
-  }, []);
-
-  const fetchBookmarks = async () => {
     setIsLoading(true);
     setError('');
 
     try {
       const response = await fetch(`${API_BASE_URL}/v1/bookmarks`, {
         headers: {
-          'X-User-ID': userIdFromStorage || 'test-user',
+          'X-User-ID': user.id,
         },
       });
 
@@ -52,7 +52,13 @@ export default function BookmarksPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [user]);
+
+  useEffect(() => {
+    if (!loading && user) {
+      fetchBookmarks();
+    }
+  }, [user, loading, fetchBookmarks]);
 
   const handleDelete = async (bookmarkId: string) => {
     if (!confirm('Remove this bookmark?')) return;
@@ -61,7 +67,7 @@ export default function BookmarksPage() {
       const response = await fetch(`${API_BASE_URL}/v1/bookmarks/${bookmarkId}`, {
         method: 'DELETE',
         headers: {
-          'X-User-ID': userIdFromStorage || 'test-user',
+          'X-User-ID': user!.id,
         },
       });
 
